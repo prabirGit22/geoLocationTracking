@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Tracking</title>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_ID&callback=initMap" async defer></script>
+    <script>
+        let map, marker, infoWindow;
+
+        // Initialize the map
+        function initMap() {
+            // Set initial map location (optional, here using a default location)
+            const initialLocation = { lat: 22.54353, lng: 88.523523 };
+
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: initialLocation,
+            });
+
+            marker = new google.maps.Marker({
+                position: initialLocation,
+                map: map,
+            });
+
+            infoWindow = new google.maps.InfoWindow();
+
+            // Try to get the user's location
+            // if (navigator.geolocation) {
+            //     navigator.geolocation.getCurrentPosition(
+            //         function (position) {
+            //             // Success - You have the user's latitude and longitude
+            //             const userLat = position.coords.latitude;
+            //             const userLng = position.coords.longitude;
+            //             console.log(`Latitude: ${userLat}, Longitude: ${userLng}`);
+
+            //             // Proceed with your logic (e.g., update map, send data to PHP backend)
+            //         },
+            //         function (error) {
+            //             // Error - Handle different types of errors
+            //             switch (error.code) {
+            //                 case error.PERMISSION_DENIED:
+            //                     alert("User denied the request for Geolocation.");
+            //                     break;
+            //                 case error.POSITION_UNAVAILABLE:
+            //                     alert("Location information is unavailable.");
+            //                     break;
+            //                 case error.TIMEOUT:
+            //                     alert("The request to get user location timed out.");
+            //                     break;
+            //                 case error.UNKNOWN_ERROR:
+            //                     alert("An unknown error occurred.");
+            //                     break;
+            //                 default:
+            //                     alert("An error occurred while retrieving location.");
+            //             }
+            //         }
+            //     );
+
+            // } else {
+            //     handleLocationError(false, infoWindow, map.getCenter());
+            // }
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    console.log(`Latitude: ${userLat}, Longitude: ${userLng}`);
+                }, function (error) {
+                    alert("Error fetching geolocation.");
+                });
+            } else {
+                alert("Geolocation is not supported in your browser. Please enter your location manually.");
+            }
+
+        }
+
+        // Handle location errors
+        function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+            infoWindow.setPosition(pos);
+            infoWindow.setContent(
+                browserHasGeolocation
+                    ? "Error: The Geolocation service failed."
+                    : "Error: Your browser doesn't support geolocation."
+            );
+            infoWindow.open(map);
+        }
+
+        // Send location data to the PHP server using AJAX
+        function sendLocationToServer(latitude, longitude) {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "save_location.php", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    console.log("Location data saved successfully: " + xhr.responseText);
+                } else {
+                    console.error("Error saving location data.");
+                }
+            };
+            xhr.send(`latitude=${latitude}&longitude=${longitude}`);
+        }
+    </script>
+</head>
+<body onload="initMap()">
+    <h2>Location Tracking</h2>
+    <div id="map"></div>
+</body>
+</html>
